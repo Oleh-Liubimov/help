@@ -10,7 +10,7 @@ export default function HomeScreen() {
   const now = new Date();
 
   const [selectedHour, setSelectedHour] = useState(now.getHours().toString());
-  const [selectedMinute, setSelectedMinute] = useState("30");
+  const [selectedMinute, setSelectedMinute] = useState("00");
 
   const hours = Array.from({ length: 24 }, (_, i) => `${i}`.padStart(2, "0"));
   const minutes = ["00", "15", "30", "45", "00"];
@@ -38,7 +38,6 @@ export default function HomeScreen() {
       <Button title="Open" onPress={handlePresentModalPress} />
 
       <BottomSheetModal
-        enablePanDownToClose
         ref={bottomSheetModalRef}
         onChange={handleSheetChanges}
         snapPoints={snapPoints}
@@ -46,7 +45,6 @@ export default function HomeScreen() {
       >
         <BottomSheetView style={styles.contentContainer}>
           <Text>Awesome 🎉</Text>
-
           <TimePicker
             hours={hours}
             minutes={minutes}
@@ -75,12 +73,5 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: "center",
     backgroundColor: "grey",
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
   },
 });

@@ -27,6 +27,7 @@ const WheelPicker = ({
   minIndex = 0,
 }: WheelPickerProps) => {
   const flatListRef = useRef<FlatList>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   React.useEffect(() => {
     if (selectedIndex >= 0 && selectedIndex < data.length) {
@@ -51,6 +52,7 @@ const WheelPicker = ({
     } else {
       index = Math.min(index, data.length - 1);
     }
+
     onChange(index);
   };
 
@@ -59,6 +61,7 @@ const WheelPicker = ({
     offset: ITEM_HEIGHT * index,
     index,
   });
+  const centerIndex = Math.round(scrollOffset / ITEM_HEIGHT);
 
   return (
     <FlatList
@@ -69,6 +72,9 @@ const WheelPicker = ({
       contentContainerStyle={{
         paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
       }}
+      onScroll={(event) => {
+        setScrollOffset(event.nativeEvent.contentOffset.y);
+      }}
       showsVerticalScrollIndicator={false}
       getItemLayout={getItemLayout}
       snapToInterval={ITEM_HEIGHT}
@@ -76,10 +82,23 @@ const WheelPicker = ({
       onMomentumScrollEnd={onMomentumScrollEnd}
       bounces={false}
       renderItem={({ item, index }) => {
-        const isSelected = index === selectedIndex;
+        const distanceFromCenter = Math.abs(index - centerIndex);
+        const isSelected = distanceFromCenter === 0;
+
+        const opacity = 1 - Math.min(distanceFromCenter * 0.2, 0.9);
+        const scale = isSelected ? 1.3 : 1;
         return (
           <View style={[styles.item, { width }]}>
-            <Text style={[styles.itemText, isSelected && styles.selectedText]}>
+            <Text
+              style={[
+                styles.itemText,
+                {
+                  opacity,
+                  transform: [{ scale }],
+                  color: isSelected ? "#000" : "#aaa",
+                },
+              ]}
+            >
               {item}
             </Text>
           </View>
@@ -124,13 +143,10 @@ export const TimePicker = ({
   const [minuteIndex, setMinuteIndex] = useState(initialMinuteIndex);
 
   const onHourChange = (index: number) => {
-    // Забороняємо вибрати годину раніше поточної
     if (index < currentHourIndex) {
       index = currentHourIndex;
     }
     setHourIndex(index);
-
-    // Якщо вибрана година == поточна, хвилина має бути >= поточної
     if (index === currentHourIndex && minuteIndex < currentMinuteIndex) {
       setMinuteIndex(currentMinuteIndex);
       onChange(hours[index], minutes[currentMinuteIndex]);
@@ -140,7 +156,6 @@ export const TimePicker = ({
   };
 
   const onMinuteChange = (index: number) => {
-    // Якщо вибрана година == поточна, хвилина не може бути менше поточної
     if (hourIndex === currentHourIndex && index < currentMinuteIndex) {
       index = currentMinuteIndex;
     }
@@ -154,6 +169,15 @@ export const TimePicker = ({
   return (
     <View style={styles.container}>
       <View style={styles.highlight} pointerEvents="none" />
+      <View
+        pointerEvents="none"
+        style={{
+          backgroundColor: "red",
+          position: "absolute",
+          top: 0,
+          zIndex: 1,
+        }}
+      />
 
       <View style={styles.pickersWrapper}>
         <WheelPicker
@@ -227,6 +251,5 @@ function findMinuteMinIndex(minutes: string[], currentMinute: number) {
       return i;
     }
   }
-  // Якщо всі менші — повертаємо 0 (або останній, залежно від логіки)
   return 0;
 }
